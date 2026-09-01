@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------
+   ForgeON design tokens
+   Single source of truth for both themes. Never hard-code hex values
+   inside components — always use the semantic Tailwind classes below.
+------------------------------------------------------------------- */
+:root {
+  --fo-bg: #f4f4f6;
+  --fo-surface: #ffffff;
+  --fo-surface-2: #eeeef1;
+  --fo-elevated: #ffffff;
+  --fo-border: #e0e0e6;
+  --fo-border-strong: #cfcfd8;
+  --fo-fg: #17171b;
+  --fo-fg-muted: #64646f;
+  --fo-fg-subtle: #8b8b96;
+  --fo-accent: #e2590a;
+  --fo-accent-hover: #c94d06;
+  --fo-accent-soft: rgba(226, 89, 10, 0.12);
+  --fo-accent-fg: #ffffff;
+  --fo-success: #157f4b;
+  --fo-success-soft: rgba(21, 127, 75, 0.12);
+  --fo-warn: #b4740a;
+  --fo-warn-soft: rgba(180, 116, 10, 0.14);
+  --fo-danger: #c03a2f;
+  --fo-danger-soft: rgba(192, 58, 47, 0.12);
+  --fo-overlay: rgba(20, 20, 24, 0.45);
+  --fo-shadow: 0 1px 2px rgba(16, 16, 20, 0.06), 0 8px 24px rgba(16, 16, 20, 0.06);
+  color-scheme: light;
+}
+
+.dark {
+  --fo-bg: #0a0a0b;
+  --fo-surface: #131316;
+  --fo-surface-2: #1b1b20;
+  --fo-elevated: #1f1f25;
+  --fo-border: #2a2a31;
+  --fo-border-strong: #3a3a44;
+  --fo-fg: #f3f3f2;
+  --fo-fg-muted: #9c9ca6;
+  --fo-fg-subtle: #71717d;
+  --fo-accent: #ff6a1a;
+  --fo-accent-hover: #ff7f3a;
+  --fo-accent-soft: rgba(255, 106, 26, 0.14);
+  --fo-accent-fg: #14100c;
+  --fo-success: #3fb27a;
+  --fo-success-soft: rgba(63, 178, 122, 0.14);
+  --fo-warn: #e0a020;
+  --fo-warn-soft: rgba(224, 160, 32, 0.14);
+  --fo-danger: #e05a4b;
+  --fo-danger-soft: rgba(224, 90, 75, 0.14);
+  --fo-overlay: rgba(0, 0, 0, 0.62);
+  --fo-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--fo-bg);
+  --color-surface: var(--fo-surface);
+  --color-surface2: var(--fo-surface-2);
+  --color-elevated: var(--fo-elevated);
+  --color-line: var(--fo-border);
+  --color-line-strong: var(--fo-border-strong);
+  --color-fg: var(--fo-fg);
+  --color-muted: var(--fo-fg-muted);
+  --color-subtle: var(--fo-fg-subtle);
+  --color-accent: var(--fo-accent);
+  --color-accent-hover: var(--fo-accent-hover);
+  --color-accent-soft: var(--fo-accent-soft);
+  --color-accent-fg: var(--fo-accent-fg);
+  --color-success: var(--fo-success);
+  --color-success-soft: var(--fo-success-soft);
+  --color-warn: var(--fo-warn);
+  --color-warn-soft: var(--fo-warn-soft);
+  --color-danger: var(--fo-danger);
+  --color-danger-soft: var(--fo-danger-soft);
+  --color-overlay: var(--fo-overlay);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --shadow-card: var(--fo-shadow);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--fo-bg);
+  color: var(--fo-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+* {
+  border-color: var(--fo-border);
+}
+
+:focus-visible {
+  outline: 2px solid var(--fo-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Numeric alignment for money / metrics */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Short, purposeful motion only */
+@keyframes fo-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fo-sheet-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes fo-pop {
+  from {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes fo-toast-in {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.anim-fade {
+  animation: fo-fade 0.14s ease-out;
+}
+.anim-sheet {
+  animation: fo-sheet-up 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.anim-pop {
+  animation: fo-pop 0.14s ease-out;
+}
+.anim-toast {
+  animation: fo-toast-in 0.16s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade,
+  .anim-sheet,
+  .anim-pop,
+  .anim-toast {
+    animation: none;
+  }
+}

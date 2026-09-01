@@ -1,0 +1,22 @@
+# ForgeON backend — Stage 1 dependencies. Keep this list minimal.
+
+# Core framework. >=5.1 required because CheckConstraint uses `condition=`.
+Django>=5.1,<6.0
+
+# REST API layer (serializers/views arrive in Stage 2+).
+djangorestframework>=3.15,<4.0
+
+# JWT authentication architecture (configured now, endpoints in Stage 2/4).
+djangorestframework-simplejwt>=5.4,<6.0
+
+# Environment-based configuration (.env) — no hard-coded secrets.
+django-environ>=0.11,<1.0
+
+# CORS for the separate React/Vite frontend origin.
+django-cors-headers>=4.4,<5.0
+
+# PostgreSQL driver (psycopg 3).
+psycopg[binary]>=3.2,<4.0
+
+# Server-side PDF report generation (Stage 3).
+reportlab>=4.2,<5.0
