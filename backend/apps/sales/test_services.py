@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from rest_framework.test import APIClient
 
 from apps.customers.models import Customer
 from apps.products.models import Product
@@ -213,3 +214,110 @@ class Stage2BusinessServiceTests(TestCase):
         self.assertEqual(preview_new_day["potentialIncrement"], 1)
         self.assertFalse(preview_new_day["dateAlreadyCounted"])
         self.assertEqual(preview_new_day["projectedCount"], 2)
+
+
+class TargetedSalesApiTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(username="target-admin", password="pwd", role=User.Role.ADMIN)
+        self.customer = Customer.objects.create(name="Ajmal", phone="9000000001", place="Olavanna")
+        self.product = Product.objects.create(
+            name="Hammer", category="Tools", unit="pc",
+            cost_price=Decimal("100.00"), selling_price=Decimal("150.00"),
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(self.admin)
+
+    def test_new_sale_uses_latest_product_price_and_keeps_old_snapshot(self):
+        first = self.client.post(
+            "/api/v1/sales/",
+            {"customerId": self.customer.id, "date": "2026-08-28", "items": [{"productId": self.product.id, "quantity": 1}]},
+            format="json",
+        )
+        self.assertEqual(first.status_code, 201)
+        old_item = SaleItem.objects.get(sale_id=first.data["id"])
+        self.product.cost_price = Decimal("120.00")
+        self.product.selling_price = Decimal("175.00")
+        self.product.save()
+        second = self.client.post(
+            "/api/v1/sales/",
+            {"customerId": self.customer.id, "date": "2026-08-29", "items": [{"productId": self.product.id, "quantity": 1}]},
+            format="json",
+        )
+        self.assertEqual(second.status_code, 201)
+        self.assertEqual(SaleItem.objects.get(sale_id=second.data["id"]).selling_price, Decimal("175.00"))
+        old_item.refresh_from_db()
+        self.assertEqual(old_item.selling_price, Decimal("150.00"))
+
+    def test_edited_sale_price_becomes_next_default_without_changing_history(self):
+        first = create_sale(
+            customer_id=self.customer.id,
+            sale_date="2026-08-28",
+            items_data=[{
+                "product_id": self.product.id,
+                "quantity": 1,
+                "cost_price": Decimal("250.00"),
+                "selling_price": Decimal("300.00"),
+            }],
+            payment_status=Sale.PaymentStatus.PAID,
+            created_by=self.admin,
+        )
+        first_item = first.items.get()
+        self.product.refresh_from_db()
+        self.assertEqual((self.product.cost_price, self.product.selling_price), (Decimal("250.00"), Decimal("300.00")))
+        self.assertEqual((first_item.cost_price, first_item.selling_price), (Decimal("250.00"), Decimal("300.00")))
+
+        second = create_sale(
+            customer_id=self.customer.id,
+            sale_date="2026-08-29",
+            items_data=[{"product_id": self.product.id, "quantity": 1}],
+            payment_status=Sale.PaymentStatus.PAID,
+            created_by=self.admin,
+        )
+        self.assertEqual((second.items.get().cost_price, second.items.get().selling_price), (Decimal("250.00"), Decimal("300.00")))
+
+        third = create_sale(
+            customer_id=self.customer.id,
+            sale_date="2026-08-30",
+            items_data=[{
+                "product_id": self.product.id,
+                "quantity": 1,
+                "cost_price": Decimal("270.00"),
+                "selling_price": Decimal("330.00"),
+            }],
+            payment_status=Sale.PaymentStatus.PAID,
+            created_by=self.admin,
+        )
+        self.assertEqual((third.items.get().cost_price, third.items.get().selling_price), (Decimal("270.00"), Decimal("330.00")))
+        self.product.refresh_from_db()
+        self.assertEqual((self.product.cost_price, self.product.selling_price), (Decimal("270.00"), Decimal("330.00")))
+        first_item.refresh_from_db()
+        self.assertEqual((first_item.cost_price, first_item.selling_price), (Decimal("250.00"), Decimal("300.00")))
+
+    def test_failed_sale_does_not_update_product_default(self):
+        with self.assertRaises(ValidationError):
+            create_sale(
+                customer_id=self.customer.id,
+                sale_date="2026-08-28",
+                items_data=[{
+                    "product_id": self.product.id,
+                    "quantity": 0,
+                    "cost_price": Decimal("250.00"),
+                    "selling_price": Decimal("300.00"),
+                }],
+                payment_status=Sale.PaymentStatus.PAID,
+                created_by=self.admin,
+            )
+        self.product.refresh_from_db()
+        self.assertEqual((self.product.cost_price, self.product.selling_price), (Decimal("100.00"), Decimal("150.00")))
+
+    def test_sales_search_supports_customer_code_without_duplicates(self):
+        create_sale(
+            customer_id=self.customer.id,
+            sale_date="2026-08-28",
+            items_data=[{"product_id": self.product.id, "quantity": 1}],
+            payment_status=Sale.PaymentStatus.PAID,
+            created_by=self.admin,
+        )
+        response = self.client.get(f"/api/v1/sales/?search={self.customer.code[2:]}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)

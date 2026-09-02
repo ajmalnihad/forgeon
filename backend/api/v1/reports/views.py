@@ -1,6 +1,7 @@
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import HttpResponse
 
 from services.report_service import (
     get_loyalty_overview,
@@ -87,6 +88,6 @@ class ReportPdfExportView(APIView):
         from services.pdf_service import build_sales_report_pdf
         params = _scope_params(request)
         pdf_bytes = build_sales_report_pdf(**params)
-        response = Response(pdf_bytes, content_type="application/pdf")
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
         response["Content-Disposition"] = 'attachment; filename="forgeon-sales-report.pdf"'
         return response

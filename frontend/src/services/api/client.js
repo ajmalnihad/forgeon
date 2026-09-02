@@ -37,6 +37,10 @@ export function toUserMessage(error, fallback = "Something went wrong. Please tr
   const data = error.response?.data;
   if (typeof data === "string" && data.length < 160) return data;
   if (data?.detail) return data.detail;
+  if (Array.isArray(data?.errors) && data.errors[0]?.message) {
+    const first = data.errors[0];
+    return `Line ${first.line}: ${first.message}`;
+  }
   if (data && typeof data === "object") {
     const first = Object.values(data).flat()[0];
     if (typeof first === "string") return first;

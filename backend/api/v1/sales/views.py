@@ -63,7 +63,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             search_clean = search.strip()
             queryset = queryset.filter(
                 models.Q(customer__name__icontains=search_clean) |
-                models.Q(customer__code__iexact=search_clean) |
+                models.Q(customer__code__icontains=search_clean) |
                 models.Q(customer__phone__icontains=search_clean) |
                 models.Q(customer__whatsapp__icontains=search_clean) |
                 models.Q(items__product_name__icontains=search_clean)
@@ -120,12 +120,15 @@ class SaleViewSet(viewsets.ModelViewSet):
         for item in items_payload:
             if "productId" not in item or "quantity" not in item:
                 raise ValidationError({"items": "Line items must contain productId and quantity."})
-            items_data.append({
+            item_data = {
                 "product_id": item["productId"],
                 "quantity": item["quantity"],
-                "cost_price": item.get("costPrice"),
-                "selling_price": item.get("sellingPrice")
-            })
+            }
+            if item.get("costPrice") is not None:
+                item_data["cost_price"] = item["costPrice"]
+            if item.get("sellingPrice") is not None:
+                item_data["selling_price"] = item["sellingPrice"]
+            items_data.append(item_data)
             
         try:
             sale = create_sale(
@@ -162,12 +165,15 @@ class SaleViewSet(viewsets.ModelViewSet):
             for item in items_payload:
                 if "productId" not in item or "quantity" not in item:
                     raise ValidationError({"items": "Line items must contain productId and quantity."})
-                items_data.append({
+                item_data = {
                     "product_id": item["productId"],
                     "quantity": item["quantity"],
-                    "cost_price": item.get("costPrice"),
-                    "selling_price": item.get("sellingPrice")
-                })
+                }
+                if item.get("costPrice") is not None:
+                    item_data["cost_price"] = item["costPrice"]
+                if item.get("sellingPrice") is not None:
+                    item_data["selling_price"] = item["sellingPrice"]
+                items_data.append(item_data)
                 
         try:
             updated_instance = update_sale(

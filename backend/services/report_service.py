@@ -23,7 +23,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
 
 from apps.customers.models import Customer
 from apps.sales.models import Sale, SaleItem
@@ -280,9 +280,19 @@ def get_top_products(
     rows = (
         qs.values("product_id", "product_name")
         .annotate(
-            quantity=Sum("quantity"),
-            revenue=Sum(F("selling_price") * F("quantity")),
-            profit=Sum(F("selling_price") * F("quantity") - F("cost_price") * F("quantity")),
+            quantity_total=Sum("quantity"),
+            revenue=Sum(
+                ExpressionWrapper(
+                    F("selling_price") * F("quantity"),
+                    output_field=DecimalField(max_digits=18, decimal_places=2),
+                )
+            ),
+            profit=Sum(
+                ExpressionWrapper(
+                    (F("selling_price") - F("cost_price")) * F("quantity"),
+                    output_field=DecimalField(max_digits=18, decimal_places=2),
+                )
+            ),
         )
         .order_by("-revenue")[:limit]
     )
@@ -290,7 +300,7 @@ def get_top_products(
         {
             "productId": row["product_id"],
             "productName": row["product_name"],
-            "quantity": row["quantity"] or 0,
+            "quantity": row["quantity_total"] or 0,
             "revenue": str(row["revenue"] or Decimal("0.00")),
             "profit": str(row["profit"] or Decimal("0.00")),
         }

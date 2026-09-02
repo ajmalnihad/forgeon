@@ -79,9 +79,20 @@ def create_sale(
             "cost_price": cost,
             "selling_price": sell
         })
-        
+
     # Calculate totals
     totals = calculate_totals_from_items(final_items)
+
+    # Apply explicit sale prices only after every line has validated. This
+    # keeps invalid sales from attempting invalid Product updates.
+    for item, final_item in zip(items_data, final_items):
+        if "cost_price" in item or "selling_price" in item:
+            product = final_item["product"]
+            if "cost_price" in item:
+                product.cost_price = final_item["cost_price"]
+            if "selling_price" in item:
+                product.selling_price = final_item["selling_price"]
+            product.save(update_fields=["cost_price", "selling_price", "updated_at"])
     
     # Create Sale
     sale = Sale.objects.create(

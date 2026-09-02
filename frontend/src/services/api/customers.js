@@ -20,6 +20,12 @@ export async function create(payload) {
   return data;
 }
 
+/** POST /api/v1/customers/bulk-import/ (Admin) */
+export async function bulkImport(text) {
+  const { data } = await apiClient.post("/api/v1/customers/bulk-import/", { text });
+  return data;
+}
+
 /** PATCH /api/v1/customers/:id/ (Admin) */
 export async function update(id, payload) {
   const { data } = await apiClient.patch(`/api/v1/customers/${id}/`, payload);

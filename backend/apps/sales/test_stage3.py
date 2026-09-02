@@ -67,7 +67,7 @@ class ReportSummaryTests(ReportServiceBase):
         self.assertEqual(data["customers"], 2)
 
         # Soft-deleted sales must be excluded from everything.
-        sale = Sale.objects.first()
+        sale = Sale.objects.get(customer=self.customer_a)
         sale.is_deleted = True
         sale.delete_reason = "test"
         sale.save()
@@ -160,9 +160,6 @@ class LoyaltyOverviewTests(ReportServiceBase):
         # 9 paid dates for Alice → approaching milestone 10
         for i in range(9):
             self._make_sale(self.customer_a, i, self.prod_x)
-        # 10th paid date → milestone reached, appears in recent
-        self._make_sale(self.customer_a, 9, self.prod_x)
-
         overview = get_loyalty_overview()
         alice_approaching = next(
             (c for c in overview["approaching"] if c["id"] == self.customer_a.id), None
@@ -170,6 +167,10 @@ class LoyaltyOverviewTests(ReportServiceBase):
         self.assertIsNotNone(alice_approaching)
         self.assertEqual(alice_approaching["paidPurchases"], 9)
 
+        # 10th paid date → milestone reached, appears in recent
+        self._make_sale(self.customer_a, 9, self.prod_x)
+
+        overview = get_loyalty_overview()
         # The 10th distinct date is a milestone → recent contains it.
         self.assertTrue(any(r["purchaseNumber"] == 10 for r in overview["recent"]))
 

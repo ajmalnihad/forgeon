@@ -199,13 +199,12 @@ export default function SaleFormPage({ mode = "create" }) {
         ...(canEditPayment
           ? { paymentDone, paymentStatus: paymentDone ? "paid" : "pending" }
           : {}),
-        items: items.map(({ productId, productName, unit, quantity, costPrice, sellingPrice }) => ({
+        items: items.map(({ productId, productName, unit, quantity, costPrice, sellingPrice, priceEdited }) => ({
           productId,
           productName,
           unit,
           quantity,
-          costPrice,
-          sellingPrice,
+          ...(priceEdited ? { costPrice, sellingPrice } : {}),
         })),
       };
       const saved =
