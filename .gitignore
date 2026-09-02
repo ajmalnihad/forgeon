@@ -33,3 +33,19 @@ STAGE_4_IMPLEMENTATION_SUMMARY.md
 FORGEON_FRONTEND_IMPLEMENTATION_DOCUMENTATION.md
 TARGETED_FIXES_IMPLEMENTATION_SUMMARY.md
 FINAL_STABILIZATION_IMPLEMENTATION_SUMMARY.md
+
+
+# Python cache
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+
+# Environment / secrets
+*.pem
+*.key
