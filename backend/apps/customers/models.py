@@ -21,7 +21,7 @@ from .utils import generate_unique_customer_code
 class Customer(models.Model):
     # Opaque display code — see module docstring. editable=False keeps it out
     # of admin forms so it can never be changed after creation.
-    code = models.CharField(max_length=12, unique=True, editable=False)
+    code = models.CharField(max_length=50, unique=True, editable=False)
 
     name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True)

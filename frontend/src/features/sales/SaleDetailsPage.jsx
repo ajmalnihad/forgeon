@@ -170,9 +170,7 @@ export default function SaleDetailsPage() {
             )}
           </div>
 
-          {data.createdBy && (
-            <p className="text-xs text-subtle">Created by {data.createdBy}</p>
-          )}
+          <p className="text-xs text-subtle">Created by: {data.createdBy || "Unknown"}</p>
         </div>
       )}
 

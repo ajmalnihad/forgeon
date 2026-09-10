@@ -136,7 +136,7 @@ export default function CustomerDetailsPage() {
         </div>
       )}
 
-      {/* Admin-only customer edit. The FO- code is immutable and shown read-only. */}
+      {/* Admin-only customer edit, including legacy customer-code corrections. */}
       {can.editCustomer && data && (
         <BottomSheet
           open={editOpen}

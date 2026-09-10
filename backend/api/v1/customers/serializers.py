@@ -24,6 +24,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     totalSpent = serializers.SerializerMethodField()
     pendingAmount = serializers.SerializerMethodField()
     lastPurchaseDate = serializers.SerializerMethodField()
+    code = serializers.CharField(required=False, max_length=50)
 
     class Meta:
         model = Customer
@@ -43,7 +44,26 @@ class CustomerSerializer(serializers.ModelSerializer):
             "pendingAmount",
             "lastPurchaseDate",
         )
-        read_only_fields = ("id", "code")
+        read_only_fields = ("id",)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        # Codes remain server-generated when customers are first created.
+        if self.instance is None:
+            fields["code"].read_only = True
+        return fields
+
+    def validate_code(self, value):
+        code = value.strip().upper()
+        if not code:
+            raise serializers.ValidationError("Customer code is required.")
+
+        queryset = Customer.objects.filter(code__iexact=code)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError("This customer code is already in use.")
+        return code
 
     def _loyalty(self, obj):
         """Cache loyalty data per object so we call the service exactly once."""

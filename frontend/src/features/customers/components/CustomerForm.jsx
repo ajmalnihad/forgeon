@@ -13,10 +13,10 @@ import { customersApi, toUserMessage } from "../../../services/api/index.js";
  *   - Phone OR WhatsApp required
  *   - Place required
  *
- * The customer display code (FO-XXXX) is generated once on creation and is
- * never editable here — it is shown read-only in edit mode.
+ * The customer display code is generated once on creation and can be corrected
+ * by an Admin when editing an existing imported customer.
  */
-const EMPTY = { name: "", phone: "", whatsapp: "", place: "", address: "", email: "" };
+const EMPTY = { code: "", name: "", phone: "", whatsapp: "", place: "", address: "", email: "" };
 
 export default function CustomerForm({
   customer = null,
@@ -56,6 +56,7 @@ export default function CustomerForm({
         place: form.place,
         address: form.address,
         email: form.email,
+        ...(isEdit ? { code: form.code } : {}),
       };
       const saved = isEdit
         ? await customersApi.update(customer.id, payload)
@@ -77,12 +78,13 @@ export default function CustomerForm({
   return (
     <form onSubmit={submit} className="space-y-3.5" noValidate>
       {isEdit && (
-        <div className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 py-2.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Customer code
-          </span>
-          <span className="tnum text-sm font-bold text-fg">{customer.code}</span>
-        </div>
+        <Input
+          label="Customer code"
+          value={form.code}
+          onChange={set("code")}
+          error={errors.code}
+          hint="Unique historical/customer reference"
+        />
       )}
       <Input label="Name" required value={form.name} onChange={set("name")} error={errors.name} data-autofocus />
       <div className="grid grid-cols-2 gap-3">
