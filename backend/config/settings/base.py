@@ -95,6 +95,7 @@ DATABASES = {
     }
 }
 
+# this is for local testing
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3",

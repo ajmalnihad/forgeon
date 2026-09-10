@@ -4,7 +4,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
+from rest_framework.exceptions import ValidationError
 
 from apps.customers.models import Customer
 from .serializers import CustomerSerializer, LoyaltyPreviewInputSerializer
@@ -52,6 +53,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
                 pass
                 
         return queryset
+
+    def perform_update(self, serializer):
+        try:
+            serializer.save()
+        except IntegrityError:
+            # The unique index remains the final protection for concurrent edits.
+            raise ValidationError({"code": "This customer code is already in use."})
 
     @action(detail=False, methods=["post"], url_path="bulk-import")
     def bulk_import(self, request):

@@ -321,3 +321,23 @@ class TargetedSalesApiTests(TestCase):
         response = self.client.get(f"/api/v1/sales/?search={self.customer.code[2:]}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
+
+    def test_sales_api_exposes_creator_name_and_handles_legacy_null_creator(self):
+        self.admin.name = "Anumol"
+        self.admin.save(update_fields=["name"])
+        created = self.client.post(
+            "/api/v1/sales/",
+            {"customerId": self.customer.id, "date": "2026-08-28", "items": [{"productId": self.product.id, "quantity": 1}]},
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(created.data["createdBy"], "Anumol")
+
+        listing = self.client.get("/api/v1/sales/")
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.data[0]["createdBy"], "Anumol")
+
+        legacy = Sale.objects.create(customer=self.customer, sale_date="2026-08-27")
+        detail = self.client.get(f"/api/v1/sales/{legacy.id}/")
+        self.assertEqual(detail.status_code, 200)
+        self.assertIsNone(detail.data["createdBy"])

@@ -46,6 +46,7 @@ export function SaleCard({ sale, onClick, showCustomer = true, deleted = false, 
               <span className="text-[11px] text-subtle">{ordinal(sale.purchaseNumber)} purchase</span>
             ) : null}
           </div>
+          <p className="mt-1 text-[11px] text-subtle">Added by: {sale.createdBy || "Unknown"}</p>
         </div>
         <div className="shrink-0 text-right">
           <p className="tnum text-base font-bold text-fg">{formatMoney(sale.total)}</p>

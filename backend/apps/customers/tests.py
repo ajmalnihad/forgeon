@@ -120,3 +120,43 @@ class CustomerApiTests(TestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_customer_code_is_generated_on_create_and_editable_by_admin(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(
+            "/api/v1/customers/",
+            {"name": "Generated", "phone": "9000000002", "place": "Kozhikode", "code": "IGNORED-CODE"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.data["code"].startswith(CODE_PREFIX))
+
+        response = self.client.patch(
+            f"/api/v1/customers/{self.customer.id}/",
+            {"code": " old-ajmal-001 "},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["code"], "OLD-AJMAL-001")
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.code, "OLD-AJMAL-001")
+
+    def test_customer_code_rejects_duplicates_and_allows_self_update(self):
+        other = Customer.objects.create(name="Other", phone="9000000003", place="Kozhikode", code="OLD-CODE")
+        self.client.force_authenticate(self.admin)
+
+        duplicate = self.client.patch(
+            f"/api/v1/customers/{self.customer.id}/",
+            {"code": " old-code "},
+            format="json",
+        )
+        self.assertEqual(duplicate.status_code, 400)
+        self.assertIn("already in use", str(duplicate.data["code"][0]).lower())
+
+        same = self.client.patch(
+            f"/api/v1/customers/{other.id}/",
+            {"code": "old-code"},
+            format="json",
+        )
+        self.assertEqual(same.status_code, 200)
+        self.assertEqual(same.data["code"], "OLD-CODE")
